@@ -1,5 +1,4 @@
 package com.example.bhagat.finalyear;
-
 import android.Manifest;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -19,19 +18,19 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -41,12 +40,13 @@ public class MakeRequest extends AppCompatActivity {
 
     com.android.volley.RequestQueue requestQueue;
     JSONArray jArr;
-    String selectedCategoryId = "", serviceId= "";
+    String selectedCategoryId = "", serviceIdVal= "",providerNameVal="",serviceNameVal="",providerPhnoVal="";
     ImageButton dueDate, callButton;
+    TextView selectDate,serviceName,providerName,providerPhno;
+    EditText quantity,address;
     Spinner selectCategory;
     Button submit;
-    //EditText quan
-    int year, month, day;
+    int year, month, day, dueDay,dueMonth, dueYear;
     static final int DIALOG_ID = 0;
 
     @Override
@@ -56,12 +56,32 @@ public class MakeRequest extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
 
-        serviceId = getIntent().getStringExtra("serviceId");
+        serviceIdVal = getIntent().getStringExtra("serviceId");
+        providerNameVal = getIntent().getStringExtra("providerName");
+        serviceNameVal = getIntent().getStringExtra("serviceName");
+        providerPhnoVal = getIntent().getStringExtra("providerPhno");
+
+        selectDate = (TextView)findViewById(R.id.select_date);
+        providerName = (TextView)findViewById(R.id.provider_name);
+        serviceName = (TextView)findViewById(R.id.service_name);
+        providerPhno = (TextView)findViewById(R.id.provider_phno);
+        quantity = (EditText)findViewById(R.id.quantity);
+        address = (EditText)findViewById(R.id.address);
+
+        providerName.setText(providerNameVal);
+        serviceName.setText(serviceNameVal);
+        providerPhno.setText(providerPhnoVal);
+
+        Toast.makeText(this,serviceIdVal +"",Toast.LENGTH_LONG).show();
 
         submit  = (Button) findViewById(R.id.submit);
         callButton = (ImageButton) findViewById(R.id.call_button);
         dueDate = (ImageButton) findViewById(R.id.pick_date_button);
         selectCategory = (Spinner) findViewById(R.id.select_category);
+
+        String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
+        Toast.makeText(this,date,Toast.LENGTH_LONG).show();
 
         //set current date
         java.util.Calendar calendar = java.util.Calendar.getInstance();
@@ -69,11 +89,15 @@ public class MakeRequest extends AppCompatActivity {
         month = calendar.get(java.util.Calendar.MONTH);
         day = calendar.get(java.util.Calendar.DAY_OF_MONTH);
 
+        dueDay = day;
+        dueMonth = month;
+        dueYear = year;
+
         //call
         callButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String phoneNumber = "tel:"+"09199095326";
+                String phoneNumber = "tel:"+providerPhnoVal;
                 Intent callIntent = new Intent(Intent.ACTION_CALL, Uri.parse(phoneNumber));
 
                 if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
@@ -99,6 +123,7 @@ public class MakeRequest extends AppCompatActivity {
             public void onClick(View view) {
                 //showDialogOnClick();
                 showDialog(DIALOG_ID);
+
             }
         });
 
@@ -125,13 +150,13 @@ public class MakeRequest extends AppCompatActivity {
     DatePickerDialog.OnDateSetListener dplistener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-            year = i ;
-            month = i1 + 1;
-            day = i2;
-            Log.d("Date ","              "+day+"/"+ month +"/"+year);
+            dueYear = i ;
+            dueMonth = i1 + 1;
+            dueDay = i2;
+            selectDate.setText(dueDay+"/"+dueMonth+"/"+dueYear);
+            Log.d("Date ",""+dueDay+"/"+ dueMonth +"/"+dueYear);
         }
     };
-
 
     ///volley
     public void inflateCategorySpinner(){
@@ -155,8 +180,6 @@ public class MakeRequest extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-
                     ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(MakeRequest.this,
                             android.R.layout.simple_spinner_dropdown_item, categoryArrayList);
                     selectCategory.setAdapter(categoryAdapter);
@@ -189,31 +212,27 @@ public class MakeRequest extends AppCompatActivity {
               protected Map<String, String> getParams()
               {
                   Map<String, String> params = new HashMap<String, String>();
-                  params.put("service_id", "3");
+                  params.put("service_id", serviceIdVal);
                   return params;
               }
           };
         requestQueue.add(request);
     }
 
-
-
     public  void  submitRequst() {
         final ProgressDialog progressDialog;
         String url = UserDetails.getInstance().url+"make_request.php";
-
         // prepare the Request
         //-> POST REQUEST USING VOLLEY
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading...");
         progressDialog.show();
-
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // response
-                        Log.d("Response", response);
+                        Log.d("Response123", response);
                         Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
                         progressDialog.hide();
                     }
@@ -231,21 +250,23 @@ public class MakeRequest extends AppCompatActivity {
             protected Map<String, String> getParams()
             {
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("service_id", "3");
-                //params.put("provider_id", "");
+                params.put("service_id", serviceIdVal);
                 params.put("consumer_id", UserDetails.getInstance().consumerId);
                 params.put("category_id", selectedCategoryId);
-                params.put("quantity", "4");
+                params.put("quantity", quantity.getText().toString());
                 params.put("consumer_locx", "23.33");
-                params.put("consumer_locy", "24.3333");
+                params.put("consumer_locy", "24.33");
+                params.put("address",address.getText().toString());
+                params.put("due_day", String.valueOf(dueDay));
+                params.put("due_month", String.valueOf(dueMonth));
+                params.put("due_year", String.valueOf(dueYear));
                 params.put("day", String.valueOf(day));
-                params.put("month", month+"");
+                params.put("month", String.valueOf(month));
                 params.put("year", String.valueOf(year));
                 return params;
             }
         };
         requestQueue.add(postRequest);
-
     }
 
 
