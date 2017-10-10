@@ -30,6 +30,7 @@ public class Login extends AppCompatActivity {
         signup = (TextView) findViewById(R.id.signup);
         skip = (TextView) findViewById(R.id.skip);
         login = (Button) findViewById(R.id.login);
+        //Changing colour of signup button
         signup.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
         skip.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
 
